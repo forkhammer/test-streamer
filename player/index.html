@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .player-container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .quality-select {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .quality-select:hover {
+            background: #444;
+        }
+        .quality-select option {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <h1>HLS Video Player</h1>
+        <video id="video" controls></video>
+        <div class="controls">
+            <select id="quality" class="quality-select">
+                <option value="-1">Auto</option>
+                <option value="320">320p</option>
+                <option value="480">480p</option>
+                <option value="720">720p</option>
+                <option value="1080">1080p</option>
+            </select>
+        </div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const errorDiv = document.getElementById('error');
+        const streamUrl = 'http://localhost:8000/birds/hls/master.m3u8';
+
+        const qualitySelect = document.getElementById('quality');
+        const qualityMap = {
+            '320': 0,
+            '480': 1,
+            '720': 2,
+            '1080': 3
+        };
+
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play().catch(() => {});
+            });
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    errorDiv.textContent = 'Error loading stream: ' + data.type;
+                }
+            });
+
+            qualitySelect.addEventListener('change', (e) => {
+                const value = e.target.value;
+                if (value === '-1') {
+                    hls.currentLevel = -1;
+                } else {
+                    const levelIndex = qualityMap[value];
+                    if (levelIndex !== undefined && levelIndex < hls.levels.length) {
+                        hls.currentLevel = levelIndex;
+                    }
+                }
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Safari native HLS support
+            video.src = streamUrl;
+            video.addEventListener('loadedmetadata', () => {
+                video.play().catch(() => {});
+            });
+        } else {
+            errorDiv.textContent = 'HLS is not supported in this browser';
+        }
+    </script>
+</body>
+</html>
