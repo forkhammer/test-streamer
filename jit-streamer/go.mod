@@ -1,10 +1,10 @@
-module amka.ru/packager
+module amka.ru/jit-streamer
 
 go 1.25.5
 
 require (
+	github.com/Eyevinn/mp4ff v0.50.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/google/uuid v1.6.0
 )
 
 require (

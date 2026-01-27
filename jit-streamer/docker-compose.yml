@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  jit-streamer:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../packager/.videos:/videos:ro
+    environment:
+      - PORT=8080
+      - VIDEOS_PATH=/videos
+      - SEGMENT_DURATION=4
+    restart: unless-stopped
